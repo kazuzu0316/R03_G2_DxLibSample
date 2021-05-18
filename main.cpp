@@ -99,7 +99,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//円の半径
 	int radius = 50;
 
-	int Speed = 100;
+	int Speed = 10;
 
 	//最初のシーンは、タイトル画面から
 	GameScene = GAME_SCENE_TITLE;
@@ -163,23 +163,35 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		//キーを入力
 		if (KeyDown(KEY_INPUT_UP) == TRUE)
 		{
-			Y--; //上に移動
+			Y -= Speed; //上に移動
 			
 		}
 		if (KeyDown(KEY_INPUT_DOWN) == TRUE)
 		{
-			Y++; //下に移動
+			Y += Speed; //下に移動
 		}
 		if (KeyDown(KEY_INPUT_LEFT) == TRUE)
 		{
-			X--; //左に移動
+			X -= Speed; //左に移動
 		}
 		if (KeyDown(KEY_INPUT_RIGHT) == TRUE)
 		{
-			X++; //右に移動
+			X += Speed; //右に移動
 		}
+		if (KeyDown(KEY_INPUT_1) == TRUE)
+		{
+			Speed++;  //スピードアップ
 
-		
+		}
+		if (KeyDown(KEY_INPUT_2) == TRUE)
+		{
+			Speed--;  //スピードダウン
+		}
+		if (radius > X) X = radius;	//左封鎖
+		if (radius > Y) Y = radius;	//上封鎖
+		if (GAME_WIDTH - radius < X) X = GAME_WIDTH - radius;	//右封鎖
+		if (GAME_HEIGHT - radius < Y) Y = GAME_HEIGHT - radius;	//	下封鎖
+
 
 		DrawCircle(X, Y, radius, GetColor(255, 255, 0), TRUE);
 
@@ -419,6 +431,6 @@ VOID ChangeDraw(VOID)
 	SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 
 
-	DrawString(0, 0, "切り替え画面", GetColor(0, 0, 0));
+	DrawString(0, 16, "切り替え画面", GetColor(0, 0, 0));
 	return;
 }
