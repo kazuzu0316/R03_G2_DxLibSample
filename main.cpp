@@ -1,6 +1,6 @@
 #include "DxLib.h" //DxLibを使う時は必要
-
 #include "keyboard.h"
+#include "FPS.h"
 
 //マクロ定義
 #define GAME_TITLE  "ゲームタイトル"  //ゲームタイトル
@@ -117,6 +117,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		//キーボード入力の更新
 		AllKeyUpdate();
 
+		//FPS値の更新
+		FPSUpdate();
+
 		//ESCキーで強制終了
 		if (KeyClick(KEY_INPUT_ESCAPE) == TRUE) { break; }
 
@@ -192,9 +195,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		if (GAME_WIDTH - radius < X) X = GAME_WIDTH - radius;	//右封鎖
 		if (GAME_HEIGHT - radius < Y) Y = GAME_HEIGHT - radius;	//	下封鎖
 
-
 		DrawCircle(X, Y, radius, GetColor(255, 255, 0), TRUE);
 
+		//FPS値を描画
+		FPSDraw();
+
+		//FPS値を待つ
+		FPSWait();
 
 		ScreenFlip();  //ダブルバッファリングした画面を描画
 
