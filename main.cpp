@@ -31,6 +31,8 @@ GAME_SCENE NextGameScene;  //次のゲームシーン
 //プレイヤー
 CHARACTOR player;
 
+//ゴール
+CHARACTOR Goal;
 
 //画面の切り替え
 BOOL IsFadeOut = FALSE;  //フェードアウト
@@ -70,8 +72,8 @@ VOID ChangeDraw(VOID);  //切り替え画面(描画)
 
 VOID ChangeScene(GAME_SCENE scnen);  //シーンの切り替え
 
-
-
+VOID CollUpdatePlayer(CHARACTOR* chara);	//当たり判定の領域を更新
+VOID CollUpdate(CHARACTOR* chara);			//当たり判定の領域を更新
 
 
 // プログラムは WinMain から始まります
@@ -107,6 +109,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	//ゲーム全体の初期化
 
+
 	//プレイヤーの画像を読み込み
 	strcpyDx(player.path, ".\\Image\\player.png");	//パスのコピー
 	player.handle = LoadGraph(player.path); //画像の読み込み
@@ -128,11 +131,48 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//画像の幅と高さを取得
 	GetGraphSize(player.handle, &player.width, &player.height);
 
+	//当たり判定を更新する
+	CollUpdatePlayer(&player);	//プレイヤーの当たり判定のアドレス
+
 	//プレイヤーを初期化
 	player.x = GAME_WIDTH / 2 - player.width / 2;	//中央寄せ
 	player.y = GAME_HEIGHT / 2 - player.height / 2;	//中央寄せ
-	player.speed = 5;
+	player.speed = 500;								//スピード
 	player.IsDraw = TRUE;							//描画できる
+
+
+	//プレイヤーの画像を読み込み
+	strcpyDx(Goal.path, ".\\Image\\Goal.png");	//パスのコピー
+	Goal.handle = LoadGraph(Goal.path); //画像の読み込み
+
+	//画像が読み込めなかったときは、エラー(-1)が入る
+	if (Goal.handle == -1)
+	{
+		MessageBox(
+			GetMainWindowHandle(),	//メインのウィンドウハンドル
+			Goal.path,			//メッセージ本文
+			"画像読み込みエラー!",	//メッセージタイトル
+			MB_OK					//ボタン
+		);
+
+		DxLib_End();	//強制終了
+		return -1;		//エラー終了
+	}
+
+	//画像の幅と高さを取得
+	GetGraphSize(Goal.handle, &Goal.width, &Goal.height);
+
+	//当たり判定を更新する
+	CollUpdate(&Goal);	//プレイヤーの当たり判定のアドレス
+
+	//プレイヤーを初期化
+	Goal.x = GAME_WIDTH - Goal.width;	//中央寄せ
+	Goal.y = 0;							//中央寄せ
+	Goal.speed = 500;					//スピード
+	Goal.IsDraw = TRUE;					//描画できる
+
+
+
 
 	//無限ループ
 	while (1)
@@ -205,6 +245,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	//終わるときの処理
 	DeleteGraph(player.handle);	//画像をメモリ上から削除
+	DeleteGraph(Goal.handle);	//画像をメモリ上から削除
 
 	DxLib_End();				// ＤＸライブラリ使用の終了処理
 
@@ -287,6 +328,34 @@ VOID PlayProc(VOID)
 		//エンド画面に切り替え
 		ChangeScene(GAME_SCENE_END);
 	}
+
+	//プレイヤーの操作
+	if (KeyDown(KEY_INPUT_UP) == TRUE)
+	{
+		player.y -= player.speed * fps.DeltaTime;
+	}
+
+	if (KeyDown(KEY_INPUT_DOWN) == TRUE)
+	{
+		player.y += player.speed * fps.DeltaTime;;
+	}
+
+	if (KeyDown(KEY_INPUT_LEFT) == TRUE)
+	{
+		player.x -= player.speed * fps.DeltaTime;;
+	}
+
+	if (KeyDown(KEY_INPUT_RIGHT) == TRUE)
+	{
+		player.x += player.speed * fps.DeltaTime;;
+	}
+
+	//当たり判定を更新する
+	CollUpdatePlayer(&player);
+	//当たり判定を更新する
+	CollUpdate(&Goal);
+
+
 	return;
 }
 
@@ -300,6 +369,35 @@ VOID PlayDraw(VOID)
 	{
 		//画像を描画
 		DrawGraph(player.x, player.y, player.handle, TRUE);
+	
+		//デバックのときは、当たり判定の領域を描画
+		if (GAME_DEBUG == TRUE)
+		{
+			//四角を描画
+			DrawBox(player.coll.left, player.coll.top, player.coll.right, player.coll.bottom,
+				GetColor(255, 0, 0), FALSE);
+		}
+		
+
+
+	}
+
+	//ゴールの描画
+	if (Goal.IsDraw == TRUE)
+	{
+		//画像を描画
+		DrawGraph(Goal.x, Goal.y, Goal.handle, TRUE);
+
+		//デバックのときは、当たり判定の領域を描画
+		if (GAME_DEBUG == TRUE)
+		{
+			//四角を描画
+			DrawBox(Goal.coll.left, Goal.coll.top, Goal.coll.right, Goal.coll.bottom,
+				GetColor(255, 0, 0), FALSE);
+		}
+
+
+
 	}
 
 	DrawString(0, 0, "プレイ画面", GetColor(0, 0, 0));
@@ -445,5 +543,33 @@ VOID ChangeDraw(VOID)
 
 
 	DrawString(0, 16, "切り替え画面", GetColor(0, 0, 0));
+	return;
+}
+
+/// <summary>
+/// 当たり判定の領域更新
+/// </summary>
+/// <param name="coll">当たり判定の領域</param>
+VOID CollUpdatePlayer(CHARACTOR* chara)
+{
+	chara->coll.left = chara->x;					//当たり判定微調整
+	chara->coll.top = chara->y;						//当たり判定微調整
+	chara->coll.right = chara->x + chara->width -40;	//当たり判定微調整
+	chara->coll.bottom = chara->y + chara->height;	//当たり判定微調整
+
+	return;
+}
+
+/// <summary>
+/// 当たり判定の領域更新
+/// </summary>
+/// <param name="coll">当たり判定の領域</param>
+VOID CollUpdate(CHARACTOR* chara)
+{
+	chara->coll.left = chara->x;					//当たり判定微調整
+	chara->coll.top = chara->y;						//当たり判定微調整
+	chara->coll.right = chara->x + chara->width - 40;	//当たり判定微調整
+	chara->coll.bottom = chara->y + chara->height;	//当たり判定微調整
+
 	return;
 }
