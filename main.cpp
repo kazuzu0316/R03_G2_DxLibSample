@@ -20,13 +20,27 @@ struct CHARACTOR
 	BOOL IsDraw = FALSE;//画像が描画できる?
 };
 
+//動画の構造体
+struct MOVIE
+{
+	int handle = -1;	//動画のハンドル(管理番号)
+	char path[255];		//動画の場所(パス)
+	int x;				//x位置
+	int y;				//y位置
+	int width;			//幅
+	int height;			//高さ
 
+	int Volume = 255;	//ボリューム(最小)0～255(最大)
+};
 
 //グローバル変数
 //シーンを管理する変数
 GAME_SCENE GameScene;  //現在のゲームシーン
 GAME_SCENE OldGameScene;  //前回のゲームシーン
 GAME_SCENE NextGameScene;  //次のゲームシーン
+
+//プレイ背景の動画
+MOVIE playMovie;
 
 //プレイヤー
 CHARACTOR player;
@@ -109,10 +123,33 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	//ゲーム全体の初期化
 
+	//プレイ動画の背景の読み込み
+	strcpyDx(playMovie.path, ".\\Movie\\PlayMovie.mp4");	//パスのコピー
+	playMovie.handle = LoadGraph(playMovie.path); //画像の読み込み
 
 	//プレイヤーの画像を読み込み
 	strcpyDx(player.path, ".\\Image\\player.png");	//パスのコピー
 	player.handle = LoadGraph(player.path); //画像の読み込み
+
+	//動画が読み込めなかったときは、エラー(-1)が入る
+	if (playMovie.handle == -1)
+	{
+		MessageBox(
+			GetMainWindowHandle(),	//メインのウィンドウハンドル
+			playMovie.path,			//メッセージ本文
+			"動画読み込みエラー!",	//メッセージタイトル
+			MB_OK					//ボタン
+		);
+
+		DxLib_End();	//強制終了
+		return -1;		//エラー終了
+	}
+
+	//画像の幅と高さを取得
+	GetGraphSize(playMovie.handle, &playMovie.width, &playMovie.height);
+
+	//動画のボリューム
+	playMovie.Volume = 255;
 
 	//画像が読み込めなかったときは、エラー(-1)が入る
 	if (player.handle == -1)
@@ -253,8 +290,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//終わるときの処理
 	DeleteGraph(player.handle);	//画像をメモリ上から削除
 	DeleteGraph(Goal.handle);	//画像をメモリ上から削除
+	DeleteGraph(playMovie.handle);	//動画をメモリ上から削除
 
 	DxLib_End();				// ＤＸライブラリ使用の終了処理
+
+
+
 
 	return 0;				// ソフトの終了 
 }
@@ -382,6 +423,16 @@ VOID PlayProc(VOID)
 /// </summary>
 VOID PlayDraw(VOID)
 {
+	//背景動画を描画
+	if (GetMovieStateToGraph(playMovie.handle) == 0)
+	{
+		//再生する
+		SeekMovieToGraph(playMovie.handle, 0);	//シークバーを最初に戻す
+		PlayMovieToGraph(playMovie.handle);		//動画を再生
+	}
+	//動画を描画(画像を引き伸ばす)
+	DrawExtendGraph(0, 0, GAME_WIDTH, GAME_HEIGHT, playMovie.handle, TRUE);
+
 	//プレイヤーの描画
 	if (player.IsDraw == TRUE)
 	{
