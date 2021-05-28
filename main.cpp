@@ -72,9 +72,9 @@ VOID ChangeDraw(VOID);  //切り替え画面(描画)
 
 VOID ChangeScene(GAME_SCENE scnen);  //シーンの切り替え
 
-VOID CollUpdatePlayer(CHARACTOR* chara);	//当たり判定の領域を更新
-VOID CollUpdate(CHARACTOR* chara);			//当たり判定の領域を更新
-
+VOID CollUpadateGollPlayer(CHARACTOR* chara);	//当たり判定の領域を更新
+VOID CollUpadateGoll(CHARACTOR* chara);			//当たり判定の領域を更新
+BOOL OnCollision(RECT a, RECT b);				//短形と短形の当たり判定
 
 // プログラムは WinMain から始まります
 //Windowsのプログラミング方法 = (WinAPI)で動いている
@@ -131,8 +131,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//画像の幅と高さを取得
 	GetGraphSize(player.handle, &player.width, &player.height);
 
+	/*
 	//当たり判定を更新する
-	CollUpdatePlayer(&player);	//プレイヤーの当たり判定のアドレス
+	CollUpadateGollPlayer(&player);	//プレイヤーの当たり判定のアドレス
+	*/
 
 	//プレイヤーを初期化
 	player.x = GAME_WIDTH / 2 - player.width / 2;	//中央寄せ
@@ -140,6 +142,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	player.speed = 500;								//スピード
 	player.IsDraw = TRUE;							//描画できる
 
+	//当たり判定を更新する
+	CollUpadateGollPlayer(&player);	//プレイヤーの当たり判定のアドレス
 
 	//プレイヤーの画像を読み込み
 	strcpyDx(Goal.path, ".\\Image\\Goal.png");	//パスのコピー
@@ -162,8 +166,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//画像の幅と高さを取得
 	GetGraphSize(Goal.handle, &Goal.width, &Goal.height);
 
+	/*
 	//当たり判定を更新する
-	CollUpdate(&Goal);	//プレイヤーの当たり判定のアドレス
+	CollUpadateGoll(&Goal);	//プレイヤーの当たり判定のアドレス
+	*/
 
 	//プレイヤーを初期化
 	Goal.x = GAME_WIDTH - Goal.width;	//中央寄せ
@@ -171,7 +177,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	Goal.speed = 500;					//スピード
 	Goal.IsDraw = TRUE;					//描画できる
 
-
+	//当たり判定を更新する
+	CollUpadateGoll(&Goal);	//プレイヤーの当たり判定のアドレス
 
 
 	//無限ループ
@@ -320,6 +327,7 @@ VOID Play(VOID)
 /// </summary>
 VOID PlayProc(VOID)
 {
+	/*
 	if (KeyClick(KEY_INPUT_RETURN) == TRUE)
 	{
 		//シーンを切り替え
@@ -328,6 +336,8 @@ VOID PlayProc(VOID)
 		//エンド画面に切り替え
 		ChangeScene(GAME_SCENE_END);
 	}
+	*/
+
 
 	//プレイヤーの操作
 	if (KeyDown(KEY_INPUT_UP) == TRUE)
@@ -351,10 +361,18 @@ VOID PlayProc(VOID)
 	}
 
 	//当たり判定を更新する
-	CollUpdatePlayer(&player);
+	CollUpadateGollPlayer(&player);
 	//当たり判定を更新する
-	CollUpdate(&Goal);
+	CollUpadateGoll(&Goal);
+	//プレイヤーがゴールに当たった時
+	if (OnCollision(player.coll, Goal.coll) == TRUE)
+	{
+		//エンド画面に切り替え
+		ChangeScene(GAME_SCENE_END);
 
+		//処理を強制終了
+		return;
+	};
 
 	return;
 }
@@ -550,7 +568,7 @@ VOID ChangeDraw(VOID)
 /// 当たり判定の領域更新
 /// </summary>
 /// <param name="coll">当たり判定の領域</param>
-VOID CollUpdatePlayer(CHARACTOR* chara)
+VOID CollUpadateGollPlayer(CHARACTOR* chara)
 {
 	chara->coll.left = chara->x;					//当たり判定微調整
 	chara->coll.top = chara->y;						//当たり判定微調整
@@ -564,7 +582,7 @@ VOID CollUpdatePlayer(CHARACTOR* chara)
 /// 当たり判定の領域更新
 /// </summary>
 /// <param name="coll">当たり判定の領域</param>
-VOID CollUpdate(CHARACTOR* chara)
+VOID CollUpadateGoll(CHARACTOR* chara)
 {
 	chara->coll.left = chara->x;					//当たり判定微調整
 	chara->coll.top = chara->y;						//当たり判定微調整
@@ -573,3 +591,32 @@ VOID CollUpdate(CHARACTOR* chara)
 
 	return;
 }
+/*
+typedef struct tagRECT {
+	LONG left;
+	LONG top;
+	LONG right;
+	LONG bottom;
+}; RECT, * PRECT;
+*/
+
+BOOL OnCollision(RECT a, RECT b)
+{
+	if (
+		a.left < b.right &&	//　短形Aの左辺x座標 < 短形Bの右辺x座標　かつ
+		a.top < b.bottom &&	//　短形Aの上辺y座標 < 短形Bの下辺y座標　かつ
+		a.right > b.left &&	//　短形Aの右辺x座標 > 短形Bの左辺x座標　かつ
+		a.bottom > b.top	//　短形Aの下辺y座標 > 短形Bの上辺y座標
+		)
+	{
+		//当たっているとき
+
+		return TRUE;
+	}
+	else
+	{
+		//当たっていないとき
+		return FALSE;
+	}
+}
+
