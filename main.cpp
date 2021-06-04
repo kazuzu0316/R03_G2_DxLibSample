@@ -88,7 +88,11 @@ VOID ChangeScene(GAME_SCENE scnen);  //シーンの切り替え
 
 VOID CollUpadateGollPlayer(CHARACTOR* chara);	//当たり判定の領域を更新
 VOID CollUpadateGoll(CHARACTOR* chara);			//当たり判定の領域を更新
+
 BOOL OnCollision(RECT a, RECT b);				//短形と短形の当たり判定
+
+BOOL GameLoad(VOID);		//ゲームのデータを読み込み
+VOID GameInit(VOID);		//ゲームのデータの初期化
 
 // プログラムは WinMain から始まります
 //Windowsのプログラミング方法 = (WinAPI)で動いている
@@ -123,100 +127,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	//ゲーム全体の初期化
 
-	//プレイ動画の背景の読み込み
-	strcpyDx(playMovie.path, ".\\Movie\\PlayMovie.mp4");	//パスのコピー
-	playMovie.handle = LoadGraph(playMovie.path); //画像の読み込み
-
-	//プレイヤーの画像を読み込み
-	strcpyDx(player.path, ".\\Image\\player.png");	//パスのコピー
-	player.handle = LoadGraph(player.path); //画像の読み込み
-
-	//動画が読み込めなかったときは、エラー(-1)が入る
-	if (playMovie.handle == -1)
+	//ゲーム読み込み
+	if(!GameLoad())
 	{
-		MessageBox(
-			GetMainWindowHandle(),	//メインのウィンドウハンドル
-			playMovie.path,			//メッセージ本文
-			"動画読み込みエラー!",	//メッセージタイトル
-			MB_OK					//ボタン
-		);
-
-		DxLib_End();	//強制終了
-		return -1;		//エラー終了
+		//データの読み込みに失敗したとき
+		DxLib_End();	//DxLib終了
+		return -1;		//異常終了
 	}
-
-	//画像の幅と高さを取得
-	GetGraphSize(playMovie.handle, &playMovie.width, &playMovie.height);
-
-	//動画のボリューム
-	playMovie.Volume = 255;
-
-	//画像が読み込めなかったときは、エラー(-1)が入る
-	if (player.handle == -1)
-	{
-		MessageBox(
-			GetMainWindowHandle(),	//メインのウィンドウハンドル
-			player.path,			//メッセージ本文
-			"画像読み込みエラー!",	//メッセージタイトル
-			MB_OK					//ボタン
-		);
-
-		DxLib_End();	//強制終了
-		return -1;		//エラー終了
-	}
-
-	//画像の幅と高さを取得
-	GetGraphSize(player.handle, &player.width, &player.height);
-
-	/*
-	//当たり判定を更新する
-	CollUpadateGollPlayer(&player);	//プレイヤーの当たり判定のアドレス
-	*/
-
-	//プレイヤーを初期化
-	player.x = GAME_WIDTH / 2 - player.width / 2;	//中央寄せ
-	player.y = GAME_HEIGHT / 2 - player.height / 2;	//中央寄せ
-	player.speed = 500;								//スピード
-	player.IsDraw = TRUE;							//描画できる
-
-	//当たり判定を更新する
-	CollUpadateGollPlayer(&player);	//プレイヤーの当たり判定のアドレス
-
-	//プレイヤーの画像を読み込み
-	strcpyDx(Goal.path, ".\\Image\\Goal.png");	//パスのコピー
-	Goal.handle = LoadGraph(Goal.path); //画像の読み込み
-
-	//画像が読み込めなかったときは、エラー(-1)が入る
-	if (Goal.handle == -1)
-	{
-		MessageBox(
-			GetMainWindowHandle(),	//メインのウィンドウハンドル
-			Goal.path,			//メッセージ本文
-			"画像読み込みエラー!",	//メッセージタイトル
-			MB_OK					//ボタン
-		);
-
-		DxLib_End();	//強制終了
-		return -1;		//エラー終了
-	}
-
-	//画像の幅と高さを取得
-	GetGraphSize(Goal.handle, &Goal.width, &Goal.height);
-
-	/*
-	//当たり判定を更新する
-	CollUpadateGoll(&Goal);	//プレイヤーの当たり判定のアドレス
-	*/
-
-	//プレイヤーを初期化
-	Goal.x = GAME_WIDTH - Goal.width;	//中央寄せ
-	Goal.y = 0;							//中央寄せ
-	Goal.speed = 500;					//スピード
-	Goal.IsDraw = TRUE;					//描画できる
-
-	//当たり判定を更新する
-	CollUpadateGoll(&Goal);	//プレイヤーの当たり判定のアドレス
-
+	
+	//ゲームの初期化
+	GameInit();
 
 	//無限ループ
 	while (1)
@@ -300,6 +220,119 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	return 0;				// ソフトの終了 
 }
 
+
+/// <summary>
+/// ゲームのデータを読み込み
+/// </summary>
+/// <returns>読み込めたらTRUE / 読み込めなかったらFALSE</returns>
+BOOL GameLoad()
+{
+	//ゲーム全体の初期化
+
+	//プレイ動画の背景の読み込み
+	strcpyDx(playMovie.path, ".\\Movie\\PlayMovie.mp4");	//パスのコピー
+	playMovie.handle = LoadGraph(playMovie.path); //画像の読み込み
+
+	//プレイヤーの画像を読み込み
+	strcpyDx(player.path, ".\\Image\\player.png");	//パスのコピー
+	player.handle = LoadGraph(player.path); //画像の読み込み
+
+	//動画が読み込めなかったときは、エラー(-1)が入る
+	if (playMovie.handle == -1)
+	{
+		MessageBox(
+			GetMainWindowHandle(),	//メインのウィンドウハンドル
+			playMovie.path,			//メッセージ本文
+			"動画読み込みエラー!",	//メッセージタイトル
+			MB_OK					//ボタン
+		);
+		return FALSE;	//読み込み失敗
+	}
+
+	//画像の幅と高さを取得
+	GetGraphSize(playMovie.handle, &playMovie.width, &playMovie.height);
+
+	//動画のボリューム
+	playMovie.Volume = 255;
+
+	//画像が読み込めなかったときは、エラー(-1)が入る
+	if (player.handle == -1)
+	{
+		MessageBox(
+			GetMainWindowHandle(),	//メインのウィンドウハンドル
+			player.path,			//メッセージ本文
+			"画像読み込みエラー!",	//メッセージタイトル
+			MB_OK					//ボタン
+		);
+		return FALSE;	//読み込み失敗
+	}
+
+	//画像の幅と高さを取得
+	GetGraphSize(player.handle, &player.width, &player.height);
+
+	/*
+	//当たり判定を更新する
+	CollUpadateGollPlayer(&player);	//プレイヤーの当たり判定のアドレス
+	*/
+
+
+	//プレイヤーの画像を読み込み
+	strcpyDx(Goal.path, ".\\Image\\Goal.png");	//パスのコピー
+	Goal.handle = LoadGraph(Goal.path); //画像の読み込み
+
+	//画像が読み込めなかったときは、エラー(-1)が入る
+	if (Goal.handle == -1)
+	{
+		MessageBox(
+			GetMainWindowHandle(),	//メインのウィンドウハンドル
+			Goal.path,			//メッセージ本文
+			"画像読み込みエラー!",	//メッセージタイトル
+			MB_OK					//ボタン
+		);
+
+		return FALSE;	//読み込み失敗
+	}
+
+	//画像の幅と高さを取得
+	GetGraphSize(Goal.handle, &Goal.width, &Goal.height);
+
+	/*
+	//当たり判定を更新する
+	CollUpadateGoll(&Goal);	//プレイヤーの当たり判定のアドレス
+	*/
+
+	
+
+	return TRUE;	//	全て読み込めた!
+}
+
+/// <summary>
+/// ゲームデータの初期化
+/// </summary>
+/// <param name=""></param>
+VOID GameInit(VOID)
+{
+	//プレイヤーを初期化
+	player.x = GAME_WIDTH / 2 - player.width / 2;	//中央寄せ
+	player.y = GAME_HEIGHT / 2 - player.height / 2;	//中央寄せ
+	player.speed = 500;								//スピード
+	player.IsDraw = TRUE;							//描画できる
+
+	//当たり判定を更新する
+	CollUpadateGollPlayer(&player);	//プレイヤーの当たり判定のアドレス
+
+	//ゴールを初期化
+	Goal.x = GAME_WIDTH - Goal.width;	//中央寄せ
+	Goal.y = 0;							//中央寄せ
+	Goal.speed = 500;					//スピード
+	Goal.IsDraw = TRUE;					//描画できる
+
+	//当たり判定を更新する
+	CollUpadateGoll(&Goal);	//プレイヤーの当たり判定のアドレス
+}
+
+
+
 VOID ChangeScene(GAME_SCENE scene)
 {
 	GameScene = scene;				//シーンを切り替え
@@ -334,6 +367,9 @@ VOID TitleProc(VOID)
 	{
 		//シーンを切り替え
 		//次のシーンの初期化をここで行うと楽
+
+		//ゲームの初期化
+		GameInit();
 
 		//プレイ画面に切り替え
 		ChangeScene(GAME_SCENE_PLAY);
