@@ -67,6 +67,8 @@ AUDIO TitleBGM;	//
 AUDIO PlayBGM;	//
 AUDIO EndBGM;	//
 
+//効果音
+AUDIO PlayerSE;
 
 //画面の切り替え
 BOOL IsFadeOut = FALSE;  //フェードアウト
@@ -241,6 +243,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	DeleteSoundMem(PlayBGM.handle);		//音楽をメモリ上から削除
 	DeleteSoundMem(EndBGM.handle);		//音楽をメモリ上から削除
 
+	DeleteSoundMem(PlayerSE.handle);	//音楽をメモリ上から削除
+
 	DxLib_End();				// ＤＸライブラリ使用の終了処理
 
 
@@ -331,6 +335,7 @@ BOOL GameLoad()
 	if (!LoadAudio(&PlayBGM, ".\\Audio\\Neon_Garden.mp3", 255, DX_PLAYTYPE_LOOP)) { return FALSE; }
 	if (!LoadAudio(&EndBGM, ".\\Audio\\I&#039m_here.mp3", 255, DX_PLAYTYPE_LOOP)) { return FALSE; }
 
+	if (!LoadAudio(&PlayerSE, ".\\Audio\\可愛い足音.mp3", 255, DX_PLAYTYPE_BACK)) { return FALSE; }
 
 	return TRUE;	//	全て読み込めた!
 }
@@ -492,7 +497,7 @@ VOID PlayProc(VOID)
 	}
 	*/
 	//BGMが流れていないとき
-	if (CheckSoundMem(PlayBGM.handle) == 0)
+	if (CheckSoundMem(PlayerSE.handle) == 0)
 	{
 		//BGMを流す
 		PlaySoundMem(PlayBGM.handle, PlayBGM.playType);
@@ -502,21 +507,48 @@ VOID PlayProc(VOID)
 	if (KeyDown(KEY_INPUT_UP) == TRUE)
 	{
 		player.y -= player.speed * fps.DeltaTime;
+	
+		//動くときの効果音を追加
+		if (CheckSoundMem(PlayerSE.handle) == 0)
+		{
+			PlaySoundMem(PlayerSE.handle, PlayerSE.playType);
+
+		}
 	}
 
 	if (KeyDown(KEY_INPUT_DOWN) == TRUE)
 	{
 		player.y += player.speed * fps.DeltaTime;;
-	}
 
+		//動くときの効果音を追加
+		if (CheckSoundMem(PlayerSE.handle) == 0)
+		{
+			PlaySoundMem(PlayerSE.handle, PlayerSE.playType);
+
+		}
+	}
 	if (KeyDown(KEY_INPUT_LEFT) == TRUE)
 	{
 		player.x -= player.speed * fps.DeltaTime;;
+	
+		//動くときの効果音を追加
+		if (CheckSoundMem(PlayerSE.handle) == 0)
+		{
+			PlaySoundMem(PlayerSE.handle, PlayerSE.playType);
+
+		}
 	}
 
 	if (KeyDown(KEY_INPUT_RIGHT) == TRUE)
 	{
 		player.x += player.speed * fps.DeltaTime;;
+	
+		//動くときの効果音を追加
+		if (CheckSoundMem(PlayerSE.handle) == 0)
+		{
+			PlaySoundMem(PlayerSE.handle, PlayerSE.playType);
+
+		}
 	}
 
 	//当たり判定を更新する
