@@ -100,6 +100,10 @@ int fadeInCntInit = fadeTimeMAX;	//初期化
 int fadeInCnt = fadeInCntInit;		//フェードインのカウンタ
 int fadeInCntMAX = fadeTimeMAX;				//フェードインのカウンタMAX
 
+//PushEnterの点滅
+int PushEnterCnt = 0;			//カウント
+const int PushEnterCntMAX = 60;		//カウントMAX値
+BOOL PushEnterBrink = FALSE;	//点滅しているか？
 
 //プロトタイプ宣言
 VOID Title(VOID);		//タイトル画面
@@ -320,7 +324,7 @@ BOOL GameLoad(VOID)
 	//ロゴを読み込む
 	if (!LoadImageMem(&TitleLogo, ".\\Image\\タイトルロゴ.\png")) { return FALSE; }
 	if (!LoadImageMem(&TitleEnter, ".\\Image\\PushEnter.\png")) { return FALSE; }
-	if (!LoadImageMem(&EndClear, ".\\Image\\Clear.\png")) { return FALSE; }
+	if (!LoadImageMem(&EndClear, ".\\Image\\Clear2.\png")) { return FALSE; }
 
 	//音楽を読み込む
 	if (!LoadAudio(&TitleBGM, ".\\Audio\\Summer_Princess.mp3", 255, DX_PLAYTYPE_LOOP)) { return FALSE; }
@@ -421,6 +425,23 @@ VOID GameInit(VOID)
 
 	//当たり判定を更新する
 	CollUpadateGoll(&Goal);	//プレイヤーの当たり判定のアドレス
+
+	//タイトルロゴの位置を決める
+	TitleLogo.x = GAME_WIDTH / 2 - TitleLogo.width / 2;	//中央揃え
+	TitleLogo.y = 100;
+
+	//PusHEnterの位置を決める
+	TitleEnter.x = GAME_WIDTH / 2 - TitleEnter.width / 2;	//中央揃え
+	TitleEnter.y = GAME_HEIGHT - TitleEnter.height - 100;
+
+	//PushEnterの点滅
+	int PushEnterCnt = 0;			//カウント
+	//int PushEnterCntMAX = 60;		初期化しなくていい?
+	BOOL PushEnterBrink = FALSE;	//点滅しているか？
+
+	//クリアロゴの位置を決める
+	EndClear.x = GAME_WIDTH / 2 - EndClear.width / 2;	//中央揃え
+	EndClear.y = GAME_HEIGHT / 2 - EndClear.height / 2;		//中央揃え
 }
 
 VOID ChangeScene(GAME_SCENE scene)
@@ -482,6 +503,44 @@ VOID TitleProc(VOID)
 /// </summary>
 VOID TitleDraw(VOID)
 {
+	//タイトルロゴの描画
+	DrawGraph(TitleLogo.x, TitleLogo.y, TitleLogo.handle, TRUE);
+
+	//MAX値までを持つ
+	if (PushEnterCnt < PushEnterCntMAX) { PushEnterCnt++; }
+	else
+	{
+		if (PushEnterBrink == TRUE)PushEnterBrink = FALSE;
+		else if (PushEnterBrink == FALSE)PushEnterBrink = TRUE;
+	
+		PushEnterCnt = 0;	//カウントを初期化
+	}
+
+	//PushEnterを描画
+	if (PushEnterBrink == TRUE)
+	{
+		//半透明にする
+		SetDrawBlendMode(DX_BLENDMODE_ALPHA, ((float)PushEnterCnt / PushEnterCntMAX) * 255);
+
+		//PushEnterの描画
+		DrawGraph(TitleEnter.x, TitleEnter.y, TitleEnter.handle, TRUE);
+
+		//半透明終了
+		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+	}
+
+	if (PushEnterBrink == FALSE)
+	{
+		//半透明にする
+		SetDrawBlendMode(DX_BLENDMODE_ALPHA, ((float)(PushEnterCntMAX - PushEnterCnt) / PushEnterCntMAX) * 255);
+
+		//PushEnterの描画
+		DrawGraph(TitleEnter.x, TitleEnter.y, TitleEnter.handle, TRUE);
+
+		//半透明終了
+		SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
+	}
+
 	DrawString(0, 0, "タイトル画面", GetColor(0, 0, 0));
 	return;
 }
@@ -686,6 +745,9 @@ VOID EndProc(VOID)
 /// </summary>
 VOID EndDraw(VOID)
 {
+	//EndClearの描画
+	DrawGraph(EndClear.x, EndClear.y, EndClear.handle, TRUE);
+
 	DrawString(0, 0, "エンド画面", GetColor(0, 0, 0));
 	return;
 }
